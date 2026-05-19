@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enneagramm-Test</title>
+<style>
+  :root {
+    --primary: #2c3e50;
+    --accent: #8e44ad;
+    --accent-light: #a569bd;
+    --bg: #f4f1f8;
+    --card: #ffffff;
+    --text: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #e0d6f0;
+    --success: #27ae60;
+    --type-colors: #8e44ad;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* WELCOME SCREEN */
+  #welcome {
+    background: linear-gradient(135deg, #2c3e50 0%, #8e44ad 100%);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .welcome-logo {
+    width: 120px; height: 120px;
+    margin: 0 auto 30px;
+  }
+  .welcome-title { color: white; font-size: 2.2rem; font-weight: 700; margin-bottom: 12px; }
+  .welcome-sub { color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 40px; max-width: 480px; line-height: 1.6; }
+  .info-grid {
+    display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .info-card {
+    background: rgba(255,255,255,0.15); border-radius: 12px;
+    padding: 16px 24px; color: white; min-width: 130px;
+  }
+  .info-card .num { font-size: 2rem; font-weight: 700; }
+  .info-card .lbl { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+  .name-input-wrap { margin-bottom: 30px; }
+  .name-input-wrap input {
+    padding: 14px 20px; border-radius: 30px; border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.15); color: white; font-size: 1.1rem;
+    width: 300px; text-align: center; outline: none;
+    placeholder-color: rgba(255,255,255,0.6);
+  }
+  .name-input-wrap input::placeholder { color: rgba(255,255,255,0.6); }
+  .btn-start {
+    background: white; color: var(--accent); border: none;
+    padding: 16px 48px; border-radius: 30px; font-size: 1.1rem; font-weight: 600;
+    cursor: pointer; transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+
+  /* QUIZ SCREEN */
+  #quiz { background: var(--bg); }
+  .quiz-header {
+    background: var(--primary); color: white;
+    padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .quiz-header h1 { font-size: 1rem; font-weight: 600; flex: 1; }
+  .progress-wrap { flex: 1; }
+  .progress-bar-bg {
+    background: rgba(255,255,255,0.2); border-radius: 10px; height: 6px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    background: white; height: 100%; border-radius: 10px;
+    transition: width .4s ease;
+  }
+  .progress-text { font-size: 0.8rem; opacity: 0.8; margin-top: 4px; }
+  .quiz-body {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 30px 20px;
+  }
+  .question-card {
+    background: var(--card); border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(142,68,173,0.1);
+    padding: 40px; max-width: 680px; width: 100%;
+    animation: fadeUp .3s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .phase-badge {
+    display: inline-block; background: var(--bg); color: var(--accent);
+    font-size: 0.75rem; font-weight: 600; padding: 4px 12px;
+    border-radius: 20px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .question-text {
+    font-size: 1.25rem; line-height: 1.6; color: var(--text);
+    margin-bottom: 32px; font-weight: 500;
+  }
+  .likert-labels {
+    display: flex; justify-content: space-between;
+    font-size: 0.75rem; color: var(--muted); margin-bottom: 8px;
+  }
+  .likert-options {
+    display: flex; gap: 12px; justify-content: center; margin-bottom: 8px;
+  }
+  .likert-btn {
+    width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--border);
+    background: white; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    color: var(--muted); transition: all .2s; display: flex; align-items: center; justify-content: center;
+  }
+  .likert-btn:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.08); }
+  .likert-btn.selected {
+    background: var(--accent); border-color: var(--accent);
+    color: white; transform: scale(1.08);
+  }
+  .likert-num { font-size: 0.8rem; }
+  .nav-row {
+    display: flex; justify-content: space-between; align-items: center; margin-top: 28px;
+  }
+  .btn-nav {
+    padding: 10px 24px; border-radius: 20px; border: 2px solid var(--border);
+    background: white; color: var(--muted); cursor: pointer; font-size: 0.9rem;
+    transition: all .2s;
+  }
+  .btn-nav:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-nav.primary {
+    background: var(--accent); color: white; border-color: var(--accent);
+    font-weight: 600; padding: 10px 32px;
+  }
+  .btn-nav.primary:hover { background: var(--accent-light); border-color: var(--accent-light); }
+  .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* SECTION TRANSITION */
+  .section-break {
+    background: var(--card); border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(142,68,173,0.1);
+    padding: 48px 40px; max-width: 680px; width: 100%;
+    text-align: center; animation: fadeUp .3s ease;
+  }
+  .section-break .icon { font-size: 3rem; margin-bottom: 16px; }
+  .section-break h2 { font-size: 1.5rem; margin-bottom: 12px; color: var(--primary); }
+  .section-break p { color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+
+  /* RESULTS SCREEN */
+  #results { background: var(--bg); padding: 30px 20px; align-items: center; }
+  .results-container { max-width: 760px; width: 100%; }
+  .results-header {
+    background: linear-gradient(135deg, #2c3e50 0%, #8e44ad 100%);
+    border-radius: 20px; padding: 40px; color: white; text-align: center; margin-bottom: 24px;
+  }
+  .results-header .type-num { font-size: 4rem; font-weight: 700; line-height: 1; }
+  .results-header .type-name { font-size: 1.4rem; margin-top: 8px; opacity: 0.9; }
+  .results-header .type-sub { font-size: 1rem; opacity: 0.75; margin-top: 6px; }
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 600px) { .results-grid { grid-template-columns: 1fr; } }
+  .result-card {
+    background: var(--card); border-radius: 16px;
+    padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .result-card h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 12px; }
+  .result-card .value { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+  .result-card .desc { font-size: 0.85rem; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .score-bars { margin-top: 12px; }
+  .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .score-label { font-size: 0.8rem; width: 60px; color: var(--text); }
+  .score-bar-bg { flex: 1; background: var(--bg); border-radius: 4px; height: 8px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width .6s ease; }
+  .score-pct { font-size: 0.75rem; color: var(--muted); width: 32px; text-align: right; }
+  .stress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .stress-item { display: flex; align-items: center; justify-content: space-between; }
+  .stress-name { font-size: 0.8rem; color: var(--muted); }
+  .stress-val {
+    font-size: 0.75rem; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .stress-val.low { background: #d5f5e3; color: #1e8449; }
+  .stress-val.mid { background: #fef9e7; color: #d4ac0d; }
+  .stress-val.high { background: #fdebd0; color: #e67e22; }
+  .btn-pdf {
+    width: 100%; padding: 18px; border-radius: 16px; border: none;
+    background: linear-gradient(135deg, #2c3e50 0%, #8e44ad 100%);
+    color: white; font-size: 1.1rem; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(142,68,173,0.3);
+    transition: opacity .2s, transform .2s;
+  }
+  .btn-pdf:hover { opacity: 0.9; transform: translateY(-2px); }
+  .btn-restart {
+    width: 100%; padding: 14px; border-radius: 16px;
+    border: 2px solid var(--border); background: white;
+    color: var(--muted); font-size: 1rem; cursor: pointer; margin-top: 12px;
+    transition: all .2s;
+  }
+  .btn-restart:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* SVG Enneagramm */
+  .ennea-svg-wrap { text-align: center; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ WELCOME ═══════════════ -->
+<div id="welcome" class="screen active">
+  <svg class="welcome-logo" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="60" cy="60" r="58" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+    <circle cx="60" cy="60" r="44" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    <!-- 9 dots on circle -->
+    <g fill="white">
+      <circle cx="60" cy="16" r="5"/>   <!-- 1: top -->
+      <circle cx="93" cy="29" r="5"/>   <!-- 2 -->
+      <circle cx="104" cy="65" r="5"/>  <!-- 3 -->
+      <circle cx="87" cy="95" r="5"/>   <!-- 4 -->
+      <circle cx="60" cy="108" r="5"/>  <!-- 5 -->
+      <circle cx="33" cy="95" r="5"/>   <!-- 6 -->
+      <circle cx="16" cy="65" r="5"/>   <!-- 7 -->
+      <circle cx="27" cy="29" r="5"/>   <!-- 8 -->
+      <circle cx="60" cy="16" r="5"/>   <!-- 9 (same as 1 top) - skip, using star -->
+    </g>
+    <!-- Triangle (3-6-9) -->
+    <polygon points="60,16 104,65 33,95" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+    <!-- Hexad lines -->
+    <polyline points="60,108 87,95" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <polyline points="93,29 16,65 27,29 104,65" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <circle cx="60" cy="60" r="6" fill="rgba(255,255,255,0.9)"/>
+  </svg>
+  <h1 class="welcome-title">Enneagramm-Test</h1>
+  <p class="welcome-sub">Entdecke deinen Persönlichkeitsstil mit einem wissenschaftlich fundierten Fragebogen — und erhalte deinen persönlichen Report als PDF.</p>
+  <div class="info-grid">
+    <div class="info-card"><div class="num">~100</div><div class="lbl">Fragen</div></div>
+    <div class="info-card"><div class="num">~20</div><div class="lbl">Minuten</div></div>
+    <div class="info-card"><div class="num">9</div><div class="lbl">Stile</div></div>
+    <div class="info-card"><div class="num">PDF</div><div class="lbl">Report</div></div>
+  </div>
+  <div class="name-input-wrap">
+    <input type="text" id="userName" placeholder="Dein Name (optional)" maxlength="40"/>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">Test starten →</button>
+</div>
+
+<!-- ═══════════════ QUIZ ═══════════════ -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <div style="color:white; font-size:1.1rem; font-weight:700; white-space:nowrap;">Enneagramm</div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-text" id="progressText">Frage 1 von …</div>
+    </div>
+  </div>
+  <div class="quiz-body">
+    <div id="questionContainer"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ RESULTS ═══════════════ -->
+<div id="results" class="screen">
+  <div class="results-container">
+    <div class="results-header" id="resultsHeader"></div>
+    <div class="ennea-svg-wrap" id="enneasvg"></div>
+    <div class="results-grid" id="resultsGrid"></div>
+    <button class="btn-pdf" onclick="generatePDF()">📄 PDF-Report herunterladen</button>
+    <button class="btn-restart" onclick="restart()">↩ Neu starten</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  ENNEAGRAMM DATA
+// ══════════════════════════════════════════════════════
+const TYPE_DATA = {
+  1: {
+    name: "Strikter Perfektionist",
+    core: "Prinzipientreu, ethisch, selbstdiszipliniert und verbesserungsorientiert",
+    motivation: "Gut, richtig und vollkommen zu sein — Fehler vermeiden",
+    fear: "Fehler zu machen, böse oder korrupt zu sein",
+    gifts: "Urteilsvermögen, Integrität, hohe Standards",
+    vice: "Ärger, Selbstkritik",
+    worldview: "Die Welt muss verbessert werden. Es gibt einen richtigen Weg.",
+    inner: "Ich muss es richtig machen; ich muss Fehler vermeiden.",
+    relax: 7, stress: 4,
+    description: "Ennea 1 Typen stehen für Verbesserung und richtiges Handeln. Sie sind prinzipientreu, haben ein klares Gefühl für richtig und falsch und können idealistisch, selbstgerecht oder wertend erscheinen. Sie organisieren ihre Welt, schätzen Fakten, Präzision und Klarheit und arbeiten hart daran, Fehler zu vermeiden.",
+    strengths: ["Integrität und starke ethische Prinzipien", "Konsequenz und Zuverlässigkeit", "Hohe persönliche Standards und Qualitätsbewusstsein", "Analytisches Denken und Liebe zum Detail", "Fairness und Objektivität in Urteilen"],
+    weaknesses: ["Übermaß an Selbstkritik und Perfektionismus", "Schwierigkeit, andere zu akzeptieren die nicht Ihren Standards entsprechen", "Rigidität und Schwierigkeit mit Flexibilität", "Unterdrückte Wut, die sich in Kritik äußert", "Schwierigkeit, sich zu entspannen und Freude zuzulassen"],
+  },
+  2: {
+    name: "Rücksichtsvoller Helfer",
+    core: "Warmherzig, hilfsbereit, menschenorientiert, beziehungsfokussiert",
+    motivation: "Geliebt zu werden, gebraucht zu werden, anderen zu helfen",
+    fear: "Unerwünscht oder ungeliebt zu sein",
+    gifts: "Empathie, Großzügigkeit, Fürsorge",
+    vice: "Stolz, Schmeichelei",
+    worldview: "Die Welt wird durch Liebe und Beziehungen bewegt.",
+    inner: "Ich muss anderen helfen; ich bin wichtig weil ich gebraucht werde.",
+    relax: 4, stress: 8,
+    description: "Ennea 2 Typen möchten die Bedürfnisse anderer auf hilfreiche und unterstützende Weise erfüllen. Warmherzig, hilfsbereit und menschenorientiert, suchen sie Bestätigung in ihren Beziehungen und können sensibel und wütend werden, wenn sie sich nicht geschätzt fühlen.",
+    strengths: ["Tiefe Empathie und emotionale Intelligenz", "Aufrichtige Fürsorge und Großzügigkeit", "Fähigkeit, andere zu inspirieren und zu motivieren", "Intuitives Verständnis der Bedürfnisse anderer", "Warmherzigkeit und Zugänglichkeit"],
+    weaknesses: ["Schwierigkeit, eigene Bedürfnisse anzuerkennen", "Neigung zur Manipulation durch Geben mit Erwartung", "Überidentifikation mit der Rolle des Helfers", "Schwierigkeit, 'Nein' zu sagen", "Gefühle der Vernachlässigung, wenn Hilfe nicht anerkannt wird"],
+  },
+  3: {
+    name: "Konkurrierender Erfolgstyp",
+    core: "Praktisch, aufgabenorientiert, wettbewerbsorientiert, imageorientiert",
+    motivation: "Erfolgreich zu sein, anerkannt und bewundert zu werden",
+    fear: "Wertlos oder ein Versager zu sein",
+    gifts: "Effizienz, Optimismus, Selbstmotivation",
+    vice: "Täuschung, Selbsttäuschung",
+    worldview: "Erfolg und Leistung definieren den Wert einer Person.",
+    inner: "Ich bin was ich leiste; Scheitern ist keine Option.",
+    relax: 6, stress: 9,
+    description: "Ennea 3 Typen sind 'Macher' und neigen dazu, praktisch und aufgabenorientiert zu sein. Sie sind wettbewerbsorientiert und bereit Opfer zu bringen, um ihre Ziele zu erreichen und erfolgreich zu erscheinen.",
+    strengths: ["Hohe Leistungsmotivation und Effizienz", "Fähigkeit, andere zu inspirieren und mitzureißen", "Anpassungsfähigkeit und Pragmatismus", "Optimismus und Zuversicht", "Starke Zielorientierung"],
+    weaknesses: ["Überidentifikation mit Erfolg und Image", "Vernachlässigung eigener Gefühle zugunsten der Leistung", "Neigung zur Selbsttäuschung über Schwächen", "Schwierigkeit, authentisch zu sein jenseits des Images", "Workaholismus und emotionale Distanziertheit"],
+  },
+  4: {
+    name: "Intensiver Kreativer",
+    core: "Emotional sensibel, kreativ, ausdrucksstark, bedeutungsorientiert",
+    motivation: "Einzigartig und authentisch zu sein, Tiefe zu erleben",
+    fear: "Keine Identität oder persönliche Bedeutung zu haben",
+    gifts: "Identität, Tiefe, Originalität",
+    vice: "Neid, Melancholie",
+    worldview: "Im Leben fehlt etwas, das andere zu haben scheinen.",
+    inner: "Ich muss mir selbst treu sein; ich muss Einfluss haben.",
+    relax: 1, stress: 2,
+    description: "Ennea 4 Typen suchen nach Sinn, Tiefe und Echtheit. Sie sind emotional sensibel, sich ihrer Umgebung sehr bewusst, kreativ und ausdrucksstark. Sie können emotional belastet, maßlos und wütend sein und sich auf das konzentrieren, was in ihrem Leben fehlt.",
+    strengths: ["Tiefe emotionale Intelligenz und Empathie", "Kreativität und ästhetisches Gespür", "Authentizität und Selbstausdruck", "Fähigkeit, mit Schmerz und Schwierigkeit umzugehen", "Sinn für Schönheit und persönlichen Stil"],
+    weaknesses: ["Neigung zu Melancholie und Neid", "Übermäßige Fokussierung auf das Fehlende", "Emotionale Turbulenzen und Unberechenbarkeit", "Schwierigkeit, im Alltäglichen Freude zu finden", "Tendenz zu langen Trauerprozessen und Sensibilität für Ablehnung"],
+  },
+  5: {
+    name: "Stiller Spezialist",
+    core: "Analytisch, privat, beobachtend, kompetenzorientiert",
+    motivation: "Kompetent zu sein, zu verstehen wie die Welt funktioniert",
+    fear: "Nutzlos, hilflos oder inkompetent zu sein",
+    gifts: "Weisheit, Objektivität, Innovation",
+    vice: "Geiz (mit Zeit, Energie, Ressourcen)",
+    worldview: "Wissen ist Macht; die Welt ist überwältigend und greift in den Raum ein.",
+    inner: "Ich muss verstehen; ich muss kompetent sein.",
+    relax: 8, stress: 7,
+    description: "Ennea 5 Typen sind private Menschen mit einem aktiven Geist, die beobachten und erforschen wie die Welt funktioniert. Sie haben Mühe damit Gedanken und Gefühle zu teilen und können sozial unbeholfen oder desinteressiert erscheinen.",
+    strengths: ["Tiefe analytische Fähigkeiten", "Objektivität und Sachlichkeit", "Fähigkeit, komplexe Systeme zu verstehen", "Selbstgenügsamkeit und Unabhängigkeit", "Konzentration und Ausdauer bei intellektuellen Aufgaben"],
+    weaknesses: ["Soziale Isolation und Rückzug", "Schwierigkeit, Gefühle zu teilen und auszudrücken", "Tendenz, Wissen zu horten anstatt zu teilen", "Überanalyse auf Kosten von Handlung", "Abkopplung von körperlichen Bedürfnissen"],
+  },
+  6: {
+    name: "Loyaler Skeptiker",
+    core: "Verantwortungsbewusst, loyal, sicherheitsorientiert, ängstlich",
+    motivation: "Sicherheit und Unterstützung zu finden, Gefahren zu vermeiden",
+    fear: "Allein gelassen zu werden ohne Führung oder Unterstützung",
+    gifts: "Engagement, Loyalität, Zuverlässigkeit",
+    vice: "Angst, Zweifel",
+    worldview: "Die Welt ist gefährlich; man braucht Verbündete und muss wachsam sein.",
+    inner: "Ich vertraue mir selbst nicht; ich brauche Sicherheit und Bestätigung.",
+    relax: 9, stress: 3,
+    description: "Ennea 6 Typen sind empfänglich für potentielle Gefahren und Risiken, handeln basierend auf Angst und denken skeptisch. Sie schätzen Vertrauen, Verantwortung und Loyalität und müssen sich sicher und zugehörig fühlen.",
+    strengths: ["Tiefe Loyalität und Verlässlichkeit", "Fähigkeit, Risiken und Probleme vorausschauend zu erkennen", "Engagement für Gemeinschaft und Teamarbeit", "Ausdauer und Pflichtgefühl", "Ehrlichkeit und Integrität in Beziehungen"],
+    weaknesses: ["Chronische Angst und übertriebene Sorge", "Schwierigkeit bei Entscheidungen ohne externe Bestätigung", "Tendenz zum Katastrophendenken", "Ambivalenz zwischen Autorität und Rebellion", "Selbstzweifel und Mangel an Selbstvertrauen"],
+  },
+  7: {
+    name: "Enthusiatischer Visionär",
+    core: "Optimistisch, spontan, vielseitig, erlebnisorientiert",
+    motivation: "Glücklich und erfüllt zu sein, Schmerz zu vermeiden",
+    fear: "Deprivation und Schmerz zu erleben",
+    gifts: "Freude, Optimismus, Kreativität",
+    vice: "Maßlosigkeit, Zerstreuung",
+    worldview: "Die Welt ist voller aufregender Möglichkeiten zu entdecken.",
+    inner: "Ich will alles erleben; Schmerz und Einschränkung sind zu vermeiden.",
+    relax: 5, stress: 1,
+    description: "Ennea 7 Typen sind optimistisch und zukunftsorientiert. Sie streben danach, ihr Leben mit positiven Erfahrungen zu füllen und vermeiden Schmerz, Routine und Einschränkungen. Sie sind verspielt, begeisterungsfähig und vielseitig interessiert.",
+    strengths: ["Ansteckender Optimismus und Lebensfreude", "Kreativität und Ideenreichtum", "Fähigkeit, andere zu inspirieren und zu begeistern", "Anpassungsfähigkeit und Spontaneität", "Fähigkeit, Verbindungen zwischen scheinbar unzusammenhängenden Ideen herzustellen"],
+    weaknesses: ["Schwierigkeit, sich zu fokussieren und Dinge zu beenden", "Impulsivität und Ungeduld", "Vermeidung negativer Gefühle und schwieriger Situationen", "Überengagement und Überlastung durch zu viele Projekte", "Oberflächlichkeit durch ständige Suche nach Neuem"],
+  },
+  8: {
+    name: "Kraftvoller Beschützer",
+    core: "Selbstbewusst, entscheidungsfreudig, konfrontativ, schützend",
+    motivation: "Kontrolle über die eigene Umgebung, Schwäche vermeiden",
+    fear: "Von anderen kontrolliert oder verletzt zu werden",
+    gifts: "Stärke, Entschlossenheit, Schutz",
+    vice: "Wollust (nach Intensität und Kontrolle)",
+    worldview: "Nur die Starken überleben; Verletzlichkeit ist Schwäche.",
+    inner: "Ich muss stark sein; Kontrolle ist Sicherheit.",
+    relax: 2, stress: 5,
+    description: "Ennea 8 Typen sind kraftvoll, durchsetzungsfähig und schützend. Sie mögen Konfrontation nicht scheuen und sind direkt in ihrer Kommunikation. Sie kämpfen für Gerechtigkeit und schützen diejenigen, die sie als schwach oder verletzlich ansehen.",
+    strengths: ["Natürliche Führungskraft und Entscheidungsstärke", "Schutz der Schwachen und Unterdrückten", "Direktheit und Authentizität in der Kommunikation", "Belastbarkeit und Energie", "Fähigkeit, in Krisen ruhig zu bleiben"],
+    weaknesses: ["Überwältigende oder einschüchternde Präsenz", "Schwierigkeit, Verletzlichkeit zuzulassen", "Tendenz zur Kontrolle und Dominanz", "Impulsivität und Explosivität im Zorn", "Schwierigkeit, anderen zu vertrauen"],
+  },
+  9: {
+    name: "Friedvoller Vermittler",
+    core: "Friedliebend, tolerant, einfühlsam, harmoniebedürftig",
+    motivation: "Inneren Frieden und Harmonie zu bewahren",
+    fear: "Verlust und Trennung, Konflikte",
+    gifts: "Empathie, Offenheit, Mediation",
+    vice: "Trägheit, Selbstvergessenheit",
+    worldview: "Harmonie und Frieden sind das Wertvollste; Konflikte müssen vermieden werden.",
+    inner: "Ich will keinen Konflikt; meine Bedürfnisse sind nicht so wichtig.",
+    relax: 3, stress: 6,
+    description: "Ennea 9 Typen stehen für Frieden und Harmonie. Sie können verschiedene Standpunkte einnehmen und sind talentiert darin, zwischen Menschen zu vermitteln. Sie können passiv, dickköpfig und selbstvergessen werden.",
+    strengths: ["Tiefe Empathie und Verständnis für verschiedene Perspektiven", "Natürliche Mediationsfähigkeit", "Geduld und Toleranz", "Beruhigende Präsenz in Konfliktsituationen", "Breiter Horizont und Offenheit für verschiedene Ideen"],
+    weaknesses: ["Schwierigkeit, Prioritäten zu setzen und Entscheidungen zu treffen", "Tendenz, eigene Bedürfnisse zu vernachlässigen", "Passive Aggression statt direkter Konfrontation", "Prokrastination und Energiemangel für eigene Ziele", "Verlust des eigenen Standpunkts durch Überanpassung an andere"],
+  },
+};
+
+const SUBTYPE_DATA = {
+  SP: {
+    name: "Selbsterhaltung (SP)",
+    desc: "Fokus auf materielle Sicherheit, Gesundheit, Komfort und Wohlbefinden"
+  },
+  SX: {
+    name: "1-zu-1 / Sexuell (SX)",
+    desc: "Fokus auf intensive Einzelbeziehungen, Chemie und Tiefenverbindung"
+  },
+  SO: {
+    name: "Gesellschaftlich (SO)",
+    desc: "Fokus auf Gruppe, Gemeinschaft, gesellschaftliche Rollen und Zugehörigkeit"
+  }
+};
+
+const CENTER_DATA = {
+  feeling: { name: "Gefühlszentrum", desc: "Du verarbeitest die Welt primär über Emotionen und zwischenmenschliche Verbindungen" },
+  thinking: { name: "Denkzentrum", desc: "Du verarbeitest die Welt primär über Analyse, Logik und mentale Konzepte" },
+  action: { name: "Handlungszentrum", desc: "Du verarbeitest die Welt primär über körperliche Instinkte und direkte Aktion" },
+};
+
+// ══════════════════════════════════════════════════════
+//  QUESTIONS BANK
+// ══════════════════════════════════════════════════════
+// Format: { text, type (1-9), subtype(SP/SX/SO/null), center(feeling/thinking/action/null), stress(bool), reverse(bool) }
+
+const ALL_QUESTIONS = [
+  // ── TYPE 1 ──
+  { text: "Ich habe hohe Standards und es fällt mir schwer, Fehler zu akzeptieren — auch bei mir selbst.", type:1 },
+  { text: "Ich spüre innerlich oft eine kritische Stimme, die bewertet, ob ich es 'richtig' mache.", type:1 },
+  { text: "Ungerechtigkeit und Regellosigkeit belasten mich stark.", type:1 },
+  { text: "Ich arbeite sehr gewissenhaft und fühle mich unwohl, wenn Dinge unfertig oder unpräzise sind.", type:1 },
+  { text: "Ich neige dazu, Fehler anderer zu bemerken und es fällt mir schwer, nichts zu sagen.", type:1 },
+  { text: "Für mich gibt es oft ein klares 'Richtig' und 'Falsch' — Grauzonen bereiten mir Unbehagen.", type:1 },
+  { text: "Ich handle häufig nach dem Prinzip: 'Es gibt einen besseren Weg, und ich werde ihn finden'.", type:1 },
+  { text: "Entspannen und 'gut genug' akzeptieren fällt mir schwer.", type:1 },
+  { text: "Wenn ich etwas tue, tue ich es ordentlich — oder gar nicht.", type:1 },
+  { text: "Unterdrückte Verärgerung ist ein Thema für mich — ich merke, dass ich sie selten direkt zeige.", type:1 },
+
+  // ── TYPE 2 ──
+  { text: "Es macht mir echte Freude, für andere da zu sein — manchmal mehr als für mich selbst.", type:2 },
+  { text: "Ich spüre intuitiv, was andere brauchen — oft noch bevor sie es selbst merken.", type:2 },
+  { text: "Wenn ich mich nicht gebraucht fühle, frage ich mich, ob ich wichtig bin.", type:2 },
+  { text: "Ich finde es schwierig, Hilfe anzunehmen — ich bin lieber derjenige, der gibt.", type:2 },
+  { text: "Anerkennung und Wertschätzung von anderen sind für mein Wohlbefinden sehr wichtig.", type:2 },
+  { text: "Ich passe meine Energie und meinen Fokus an die Bedürfnisse meines Gegenübers an.", type:2 },
+  { text: "Es fällt mir schwer, 'Nein' zu sagen, wenn jemand meine Hilfe braucht.", type:2 },
+  { text: "Ich glaube, dass Beziehungen durch Geben und Fürsorge aufrechterhalten werden.", type:2 },
+  { text: "Wenn sich Menschen bei mir nicht bedanken, fühle ich mich häufig enttäuscht.", type:2 },
+  { text: "Manchmal helfe ich anderen, um mich selbst gut zu fühlen und gemocht zu werden.", type:2 },
+
+  // ── TYPE 3 ──
+  { text: "Erfolg und Leistung sind mir sehr wichtig — ich bin stark auf Ziele ausgerichtet.", type:3 },
+  { text: "Ich passe mich schnell an die Erwartungen meiner Umgebung an, um erfolgreich zu wirken.", type:3 },
+  { text: "Wie ich nach außen wahrgenommen werde, ist mir wichtig — mein Image spielt eine große Rolle.", type:3 },
+  { text: "Ich finde es schwierig, keine Ergebnisse zu zeigen oder als ineffektiv wahrgenommen zu werden.", type:3 },
+  { text: "In der Gesellschaft anderer werde ich oft zum Antreiber, der Dinge voranbringt.", type:3 },
+  { text: "Ich passe meine Selbstdarstellung situationsabhängig an, um bei anderen gut anzukommen.", type:3 },
+  { text: "Scheitern oder Versagen empfinde ich als sehr bedrohlich.", type:3 },
+  { text: "Ich verknüpfe meinen Selbstwert stark mit dem, was ich leiste.", type:3 },
+  { text: "Ich neige dazu, meine Gefühle zur Seite zu schieben, wenn es ums Ergebnis geht.", type:3 },
+  { text: "Effizienz und Pragmatismus stehen für mich an erster Stelle.", type:3 },
+
+  // ── TYPE 4 ──
+  { text: "Ich suche tief nach Bedeutung und Authentizität in meinem Leben.", type:4 },
+  { text: "Ich fühle mich oft anders oder einzigartig — ich passe in keine Schublade.", type:4 },
+  { text: "Emotionen sind für mich reich und komplex — ich erlebe sie sehr intensiv.", type:4 },
+  { text: "Ich neige dazu, das zu vermissen, was fehlt — auch wenn objektiv viel vorhanden ist.", type:4 },
+  { text: "Kreativität und Selbstausdruck sind zentrale Bedürfnisse in meinem Leben.", type:4 },
+  { text: "Neid auf das, was andere haben (und ich nicht), ist mir vertraut.", type:4 },
+  { text: "Ich sehne mich nach tiefen, bedeutungsvollen Verbindungen und Erfahrungen.", type:4 },
+  { text: "Ich habe ein ausgeprägtes ästhetisches Gespür und achte stark auf Atmosphäre.", type:4 },
+  { text: "Melancholie ist ein vertrautes Gefühl — manchmal auch eine Art Heimat.", type:4 },
+  { text: "Ich bin sehr sensibel dafür, ob mein Beitrag wertgeschätzt wird.", type:4 },
+
+  // ── TYPE 5 ──
+  { text: "Ich brauche viel Zeit allein, um meine Energie aufzuladen.", type:5 },
+  { text: "Wissen und Kompetenz sind mir sehr wichtig — ich gehe Themen gründlich auf den Grund.", type:5 },
+  { text: "In sozialen Situationen beobachte ich lieber, bevor ich aktiv teilnehme.", type:5 },
+  { text: "Ich halte meine innere Welt meistens für mich — Privatheit ist mir sehr wichtig.", type:5 },
+  { text: "Ich fühle mich wohl, wenn ich ein klares Verständnis von etwas habe, bevor ich handele.", type:5 },
+  { text: "Zu viele emotionale Anforderungen von anderen können mich überfordern.", type:5 },
+  { text: "Ich analysiere gerne Systeme und Konzepte, auch aus rein intellektuellem Interesse.", type:5 },
+  { text: "Ich neige dazu, meine Zeit, Energie und Ressourcen sorgfältig zu verwalten.", type:5 },
+  { text: "In wichtigen Situationen ziehe ich mich zuerst in mein Inneres zurück, bevor ich reagiere.", type:5 },
+  { text: "Ich fühle mich unwohl, wenn andere unvorbereitet oder inkompetent handeln.", type:5 },
+
+  // ── TYPE 6 ──
+  { text: "Ich denke viel über mögliche Risiken und Probleme nach — oft mehr als andere.", type:6 },
+  { text: "Loyalität ist mir sehr wichtig — ich stehe zu meinen Verpflichtungen und Verbündeten.", type:6 },
+  { text: "Ich hinterfrage Autoritäten und Machtstrukturen — und vertraue nicht blind.", type:6 },
+  { text: "Wenn ich Entscheidungen treffe, benötige ich oft zusätzliche Bestätigung oder Sicherheit.", type:6 },
+  { text: "Ich tue mir schwer damit, Vertrauen zu schenken — Misstrauen ist mein erster Reflex.", type:6 },
+  { text: "In Gruppen suche ich nach Verbündeten, auf die ich mich verlassen kann.", type:6 },
+  { text: "Wenn Dinge unsicher werden, werde ich schnell ängstlich oder skeptisch.", type:6 },
+  { text: "Ich spüre oft eine innere Anspannung, auch wenn objektiv keine Gefahr besteht.", type:6 },
+  { text: "Wenn ich mir nicht sicher bin, neige ich dazu, das Schlimmste anzunehmen.", type:6 },
+  { text: "Sicherheit und Vertrauen sind die Grundlage, auf der ich mich entfalten kann.", type:6 },
+
+  // ── TYPE 7 ──
+  { text: "Ich liebe neue Ideen, Erfahrungen und Abenteuer — Abwechslung energetisiert mich.", type:7 },
+  { text: "Schwierige Gefühle oder Situationen versuche ich möglichst schnell hinter mir zu lassen.", type:7 },
+  { text: "Ich habe oft viele Projekte und Interessen gleichzeitig — und es fällt mir schwer, mich zu entscheiden.", type:7 },
+  { text: "Mein Optimismus ist ansteckend — ich sehe überall Möglichkeiten.", type:7 },
+  { text: "Routine und Einschränkungen erlebe ich als beengend.", type:7 },
+  { text: "Ich vermeide Langeweile und Schmerz — ich suche aktiv nach Freude und Stimulation.", type:7 },
+  { text: "Ich habe Schwierigkeiten, Projekte zu beenden, wenn etwas Spannenderes auftaucht.", type:7 },
+  { text: "Ich neige dazu, Negatives umzudeuten oder positiv zu rahmen — manchmal zu sehr.", type:7 },
+  { text: "Das Erleben des Augenblicks und die Zukunft begeistern mich mehr als die Vergangenheit.", type:7 },
+  { text: "Ich merke, dass ich manchmal Verpflichtungen eingehe und sie dann bereue.", type:7 },
+
+  // ── TYPE 8 ──
+  { text: "Ich bin direkt und konfrontativ — ich vermeide Konflikte nicht.", type:8 },
+  { text: "Kontrolle über meine eigene Situation ist mir sehr wichtig.", type:8 },
+  { text: "Verletzlichkeit zu zeigen fällt mir sehr schwer — ich verberge sie lieber.", type:8 },
+  { text: "Ich schütze gerne Menschen, die mir nahe stehen oder die ich als schwach wahrnehme.", type:8 },
+  { text: "Wenn ich wütend bin, zeige ich das deutlich — ich halte nichts zurück.", type:8 },
+  { text: "Ich brauche Intensität — in Beziehungen, Arbeit und Erfahrungen.", type:8 },
+  { text: "Ich treffe Entscheidungen schnell und entschlossen — Zögern ist nicht meine Art.", type:8 },
+  { text: "Ich teste gelegentlich, ob ich anderen vertrauen kann — durch Herausforderungen oder Konfrontation.", type:8 },
+  { text: "Ich kämpfe für Gerechtigkeit und tue mich schwer, Ungerechtigkeit zu ignorieren.", type:8 },
+  { text: "Stärke respektiere ich — Schwäche oder Schönreden irritiert mich.", type:8 },
+
+  // ── TYPE 9 ──
+  { text: "Harmonie in meinem Umfeld ist mir sehr wichtig — ich vermeide Konflikte instinktiv.", type:9 },
+  { text: "Ich finde es leicht, die Perspektive anderer zu verstehen und nachzuvollziehen.", type:9 },
+  { text: "Meine eigenen Prioritäten geraten manchmal in den Hintergrund, wenn andere Bedürfnisse haben.", type:9 },
+  { text: "Ich brauche oft viel Zeit, um Entscheidungen zu treffen — zu viele Optionen erscheinen gleich wichtig.", type:9 },
+  { text: "Wenn es Konflikte gibt, vermittle ich gerne und versuche, alle Seiten zu verstehen.", type:9 },
+  { text: "Meine eigene Wut erkenne ich oft erst spät — sie zeigt sich eher passiv.", type:9 },
+  { text: "Ich fühle mich wohl, wenn alles 'seinen Gang geht' — starke Veränderungen machen mir Sorgen.", type:9 },
+  { text: "Ich verliere mich manchmal in Nebensächlichkeiten, um wichtige Entscheidungen zu umgehen.", type:9 },
+  { text: "In Gesellschaft passe ich mich leicht an die Energie und Bedürfnisse der Gruppe an.", type:9 },
+  { text: "Tief in mir weiß ich manchmal nicht, was ICH wirklich will — unabhängig von anderen.", type:9 },
+
+  // ── SUBTYPE QUESTIONS ──
+  { text: "Meine Gesundheit, finanzielle Sicherheit und mein Zuhause sind mir sehr wichtig — ich investiere viel Energie darin.", subtype:"SP" },
+  { text: "Eine-zu-Eins-Verbindungen mit bestimmten Menschen fühlen sich bedeutsamer an als Gruppenangehörigkeit.", subtype:"SX" },
+  { text: "Meine Rolle in der Gemeinschaft und gesellschaftliches Engagement sind mir sehr wichtig.", subtype:"SO" },
+  { text: "Ich denke viel über materielle Absicherung und körperliches Wohlbefinden nach.", subtype:"SP" },
+  { text: "Intensive Begegnungen mit einzelnen Menschen erfüllen mich mehr als soziale Events.", subtype:"SX" },
+  { text: "Wie ich in meiner Gruppe oder Gesellschaft wahrgenommen werde, beeinflusst mein Wohlbefinden.", subtype:"SO" },
+  { text: "Ich sorge mich um Alltagsstrukturen: Essen, Schlaf, Gesundheit, Routinen.", subtype:"SP" },
+  { text: "In engen Beziehungen suche ich nach Tiefe und Intensität, nicht nach Oberflächlichem.", subtype:"SX" },
+  { text: "Ich fühle mich gut, wenn ich Teil einer sinnvollen Gemeinschaft oder Bewegung bin.", subtype:"SO" },
+
+  // ── CENTER QUESTIONS ── (behavioral / wie andere dich erleben, nicht Selbstbild)
+  // Gefühlszentrum: Beziehungen, Anerkennung, emotionale Resonanz
+  { text: "Andere Menschen erleben mich als jemanden, der sehr auf die emotionale Stimmung im Raum reagiert — ich passe mich an, wie andere sich fühlen.", center:"feeling" },
+  { text: "Beziehungen und zwischenmenschliche Harmonie stehen bei mir meistens im Vordergrund — das beeinflusst meine Entscheidungen stark.", center:"feeling" },
+  { text: "Ich merke, dass ich oft versuche zu spüren, was andere von mir erwarten oder brauchen — und mich danach richte.", center:"feeling" },
+  // Denkzentrum: Analyse, Planung, Bedenken, Sicherheit
+  { text: "Bevor ich handle, mache ich mir ausführlich Gedanken über Risiken, Szenarien und mögliche Konsequenzen.", center:"thinking" },
+  { text: "Ich brauche meistens viele Informationen und klare Konzepte, bevor ich mich wirklich sicher genug fühle, um zu handeln.", center:"thinking" },
+  { text: "Andere beschreiben mich als jemanden, der viel im Kopf hat — analytisch, planend und manchmal in Gedanken versunken.", center:"thinking" },
+  // Handlungszentrum: direkte Reaktion, Körper, Instinkt, Energie
+  { text: "Ich reagiere auf Situationen meist sofort und körperlich — ich handle erst, und denke danach darüber nach.", center:"action" },
+  { text: "Andere erleben mich als energetisch, direkt und entschlossen — ich packe Dinge an, ohne lange zu zögern.", center:"action" },
+  { text: "Mein erster Impuls in neuen oder schwierigen Situationen ist körperlich spürbar — ein Bauchgefühl oder Drang zur Aktion.", center:"action" },
+
+  // ── STRESS/WELLBEING QUESTIONS ──
+  { text: "Ich fühle mich in meiner aktuellen Lebenssituation insgesamt wohl und ausgeglichen.", stress:true, dim:"gesamt" },
+  { text: "Meine berufliche Situation erfüllt mich und bereitet mir Freude.", stress:true, dim:"beruf" },
+  { text: "Meine wichtigsten Beziehungen (Familie/Freunde) fühlen sich stabil und nährend an.", stress:true, dim:"beziehung" },
+  { text: "Ich fühle mich körperlich gesund und energetisiert.", stress:true, dim:"koerper" },
+  { text: "Ich fühle mich psychisch stabil und in der Lage, Herausforderungen zu bewältigen.", stress:true, dim:"psyche" },
+  { text: "Meine Wohnumgebung und Nachbarschaft unterstützen meine Lebensqualität.", stress:true, dim:"umwelt" },
+  { text: "Ich bin insgesamt glücklich und optimistisch in Bezug auf mein Leben.", stress:true, dim:"glueck" },
+];
+
+// ══════════════════════════════════════════════════════
+//  APP STATE
+// ══════════════════════════════════════════════════════
+let state = {
+  userName: "",
+  currentQ: 0,
+  questions: [],
+  answers: {},
+  phase: "core", // core | discriminate | subtype | center | stress | done
+  topCandidates: [],
+  results: null,
+};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildQuestionList() {
+  // Phase 1: 8 questions per type (72 total), shuffled within type groups
+  const coreQs = [];
+  for (let t = 1; t <= 9; t++) {
+    const tQs = shuffle(ALL_QUESTIONS.filter(q => q.type === t)).slice(0, 8);
+    coreQs.push(...tQs);
+  }
+  // Shuffle all core questions
+  const shuffledCore = shuffle(coreQs);
+
+  // Subtype questions (all 9)
+  const subtypeQs = shuffle(ALL_QUESTIONS.filter(q => q.subtype));
+
+  // Center questions (all 6)
+  const centerQs = shuffle(ALL_QUESTIONS.filter(q => q.center));
+
+  // Stress/wellbeing (all 7)
+  const stressQs = ALL_QUESTIONS.filter(q => q.stress);
+
+  return [...shuffledCore, ...subtypeQs, ...centerQs, ...stressQs];
+}
+
+function getPhaseLabel(q) {
+  if (q.type) return "Persönlichkeitsstil";
+  if (q.subtype) return "Instinktiver Antrieb";
+  if (q.center) return "Wie andere dich erleben";
+  if (q.stress) return "Aktuelle Lebenssituation";
+  return "Enneagramm-Test";
+}
+
+// ══════════════════════════════════════════════════════
+//  SCORING
+// ══════════════════════════════════════════════════════
+function computeResults() {
+  const typeScores = {};
+  for (let t = 1; t <= 9; t++) typeScores[t] = { sum: 0, count: 0 };
+
+  const subtypeScores = { SP: 0, SX: 0, SO: 0 };
+  const centerScores = { feeling: 0, thinking: 0, action: 0 };
+  const stressScores = {};
+
+  for (const [idx, score] of Object.entries(state.answers)) {
+    const q = state.questions[parseInt(idx)];
+    if (!q) continue;
+
+    if (q.type) {
+      typeScores[q.type].sum += score;
+      typeScores[q.type].count++;
+    }
+    if (q.subtype) subtypeScores[q.subtype] += score;
+    if (q.center) centerScores[q.center] += score;
+    if (q.stress) stressScores[q.dim] = score;
+  }
+
+  // Normalize type scores to 0-100
+  const typeNorm = {};
+  let maxScore = 0;
+  for (let t = 1; t <= 9; t++) {
+    const avg = typeScores[t].count ? typeScores[t].sum / typeScores[t].count : 0;
+    typeNorm[t] = avg;
+    if (avg > maxScore) maxScore = avg;
+  }
+
+  // Sort types
+  const sortedTypes = Object.entries(typeNorm)
+    .sort(([,a],[,b]) => b - a)
+    .map(([t, s]) => ({ type: parseInt(t), score: s, pct: maxScore ? Math.round(s / maxScore * 100) : 0 }));
+
+  const mainType = sortedTypes[0].type;
+
+  // Wing: which neighbor scored higher?
+  const prev = mainType === 1 ? 9 : mainType - 1;
+  const next = mainType === 9 ? 1 : mainType + 1;
+  const wing = typeNorm[prev] >= typeNorm[next] ? prev : next;
+
+  // Subtype
+  const subtypeSorted = Object.entries(subtypeScores).sort(([,a],[,b]) => b - a);
+  const subtype = subtypeSorted[0][0];
+
+  // Center
+  const centerSorted = Object.entries(centerScores).sort(([,a],[,b]) => b - a);
+  const dominant = centerSorted[0][0];
+  const weakest = centerSorted[2][0];
+
+  // Integration (rough: based on self-awareness questions)
+  // Use average of types neighboring the main type as proxy
+  const integrationScore = Math.min(100, Math.max(0, Math.round((stressScores.psyche || 3) / 5 * 100)));
+  const integrationLevel = integrationScore > 66 ? "Hoch" : integrationScore > 33 ? "Mittel" : "Niedrig";
+
+  // Stress profile
+  const stressMap = {};
+  for (const [dim, sc] of Object.entries(stressScores)) {
+    // 5=sehr gut (niedrig belastet), 1=sehr schlecht (hoch belastet)
+    stressMap[dim] = sc >= 4 ? "NIEDRIG" : sc >= 3 ? "MITTEL" : "HOCH";
+  }
+
+  return {
+    mainType,
+    sortedTypes,
+    wing,
+    subtype,
+    center: { dominant, weakest },
+    integrationLevel,
+    stressMap,
+    typeNorm,
+  };
+}
+
+// ══════════════════════════════════════════════════════
+//  UI RENDERING
+// ══════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  state.userName = document.getElementById('userName').value.trim() || "Anonym";
+  state.questions = buildQuestionList();
+  state.currentQ = 0;
+  state.answers = {};
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const total = state.questions.length;
+  const current = state.currentQ;
+  const pct = Math.round(current / total * 100);
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `Frage ${current + 1} von ${total}`;
+
+  const q = state.questions[current];
+  const selectedAnswer = state.answers[current];
+  const phaseLabel = getPhaseLabel(q);
+
+  const container = document.getElementById('questionContainer');
+  container.innerHTML = `
+    <div class="question-card">
+      <div class="phase-badge">${phaseLabel}</div>
+      <div class="question-text">${q.text}</div>
+      <div class="likert-labels">
+        <span>Trifft gar nicht zu</span>
+        <span>Trifft voll zu</span>
+      </div>
+      <div class="likert-options">
+        ${[1,2,3,4,5].map(n => `
+          <button class="likert-btn ${selectedAnswer === n ? 'selected' : ''}" onclick="selectAnswer(${n})">
+            <span class="likert-num">${n}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="likert-labels" style="margin-top:4px">
+        <span></span>
+      </div>
+      <div class="nav-row">
+        <button class="btn-nav" onclick="prevQuestion()" ${current === 0 ? 'disabled' : ''}>← Zurück</button>
+        <button class="btn-nav primary" id="nextBtn" onclick="nextQuestion()" ${selectedAnswer === undefined ? 'disabled' : ''}>
+          ${current === total - 1 ? 'Auswerten →' : 'Weiter →'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function selectAnswer(n) {
+  state.answers[state.currentQ] = n;
+  renderQuestion();
+}
+
+function prevQuestion() {
+  if (state.currentQ > 0) {
+    state.currentQ--;
+    renderQuestion();
+  }
+}
+
+function nextQuestion() {
+  if (state.answers[state.currentQ] === undefined) return;
+  if (state.currentQ < state.questions.length - 1) {
+    state.currentQ++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  RESULTS
+// ══════════════════════════════════════════════════════
+function showResults() {
+  const r = computeResults();
+  state.results = r;
+  const t = TYPE_DATA[r.mainType];
+
+  showScreen('results');
+
+  // Header
+  document.getElementById('resultsHeader').innerHTML = `
+    <div style="opacity:0.7; font-size:0.9rem; margin-bottom:8px">${state.userName} · ${new Date().toLocaleDateString('de-DE')}</div>
+    <div class="type-num">Typ ${r.mainType}</div>
+    <div class="type-name">${t.name}</div>
+    <div class="type-sub">Flügel ${r.wing} · ${SUBTYPE_DATA[r.subtype].name}</div>
+  `;
+
+  // Enneagram SVG
+  document.getElementById('enneasvg').innerHTML = buildEnneagramSVG(r.mainType, r.sortedTypes);
+
+  // Results grid
+  const stressLabels = {
+    gesamt: "Gesamtbelastung", beruf: "Beruflich", beziehung: "Beziehungen",
+    koerper: "Körperlich", psyche: "Psychisch", umwelt: "Umwelt", glueck: "Glück"
+  };
+
+  document.getElementById('resultsGrid').innerHTML = `
+    <div class="result-card" style="grid-column: 1/-1">
+      <h3>Typ-Profil (alle 9 Stile)</h3>
+      <div class="score-bars">
+        ${r.sortedTypes.map(item => `
+          <div class="score-row">
+            <div class="score-label">Typ ${item.type}</div>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" style="width:${item.pct}%; background:${item.type === r.mainType ? '#8e44ad' : '#bdc3c7'}"></div>
+            </div>
+            <div class="score-pct">${item.pct}%</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="result-card">
+      <h3>Kern-Motivation</h3>
+      <div class="value">${t.motivation}</div>
+      <div class="desc" style="margin-top:8px">${t.core}</div>
+    </div>
+    <div class="result-card">
+      <h3>Kern-Angst</h3>
+      <div class="value" style="color:#e74c3c; font-size:1rem">${t.fear}</div>
+      <div class="desc" style="margin-top:8px">Weltanschauung: ${t.worldview}</div>
+    </div>
+    <div class="result-card">
+      <h3>Ausdruckszentrum</h3>
+      <div class="value">${CENTER_DATA[r.center.dominant].name}</div>
+      <div class="desc">${CENTER_DATA[r.center.dominant].desc}</div>
+      <div class="desc" style="margin-top:4px; font-size:0.78rem; color:#95a5a6">Schwächstes Zentrum: ${CENTER_DATA[r.center.weakest].name}</div>
+    </div>
+    <div class="result-card">
+      <h3>Subtyp</h3>
+      <div class="value">${SUBTYPE_DATA[r.subtype].name}</div>
+      <div class="desc">${SUBTYPE_DATA[r.subtype].desc}</div>
+    </div>
+    <div class="result-card">
+      <h3>Integrationsgrad</h3>
+      <div class="value" style="color:${r.integrationLevel==='Hoch'?'#27ae60':r.integrationLevel==='Mittel'?'#f39c12':'#e74c3c'}">${r.integrationLevel}</div>
+      <div class="desc">Entspannungspunkt → Typ ${t.relax} | Stresspunkt → Typ ${t.stress}</div>
+      <div class="desc" style="margin-top:4px; font-size:0.78rem; color:#95a5a6">⚠ Zeitpunkt-Maß — kann sich verändern</div>
+    </div>
+    <div class="result-card">
+      <h3>Gaben & Laster</h3>
+      <div style="font-size:0.85rem; margin-bottom:4px">✦ <strong>Gaben:</strong> ${t.gifts}</div>
+      <div style="font-size:0.85rem">⚡ <strong>Laster:</strong> ${t.vice}</div>
+    </div>
+    <div class="result-card" style="grid-column: 1/-1">
+      <h3>Belastungsprofil</h3>
+      <div class="stress-grid">
+        ${Object.entries(stressLabels).map(([dim, label]) => {
+          const val = r.stressMap[dim] || "MITTEL";
+          return `<div class="stress-item">
+            <span class="stress-name">${label}</span>
+            <span class="stress-val ${val==='NIEDRIG'?'low':val==='MITTEL'?'mid':'high'}">${val}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function buildEnneagramSVG(mainType, sortedTypes) {
+  const cx = 160, cy = 160, r = 120;
+  const typeScores = {};
+  sortedTypes.forEach(s => typeScores[s.type] = s.pct);
+
+  // Positions (type 9 at top)
+  const positions = {};
+  for (let i = 1; i <= 9; i++) {
+    const angleOffset = -90; // type 9 at top
+    const typeAngle = ((i - 9) / 9 * 360 + angleOffset) * Math.PI / 180;
+    positions[i] = {
+      x: cx + r * Math.cos(typeAngle),
+      y: cy + r * Math.sin(typeAngle),
+    };
+  }
+
+  // Inner ring (score-based)
+  const innerPoints = [];
+  for (let t = 1; t <= 9; t++) {
+    const score = (typeScores[t] || 10) / 100;
+    const ir = 20 + score * 90;
+    const angleOffset = -90;
+    const typeAngle = ((t - 9) / 9 * 360 + angleOffset) * Math.PI / 180;
+    innerPoints.push({ x: cx + ir * Math.cos(typeAngle), y: cy + ir * Math.sin(typeAngle) });
+  }
+
+  const polygon = [...innerPoints, innerPoints[0]].map(p => `${p.x},${p.y}`).join(' ');
+
+  // Enneagram connection lines
+  const triangle = [[3,6,9], [9,3]];
+  const hexad = [[1,4,2,8,5,7,1]];
+
+  let lines = '';
+  // Triangle
+  lines += `<polygon points="${[9,3,6].map(t => `${positions[t].x},${positions[t].y}`).join(' ')}" fill="none" stroke="#ddd" stroke-width="1"/>`;
+  // Hexad
+  [1,4,2,8,5,7,1].reduce((prev, cur) => {
+    lines += `<line x1="${positions[prev].x}" y1="${positions[prev].y}" x2="${positions[cur].x}" y2="${positions[cur].y}" stroke="#ddd" stroke-width="1"/>`;
+    return cur;
+  });
+
+  let dots = '';
+  for (let t = 1; t <= 9; t++) {
+    const p = positions[t];
+    const isMain = t === mainType;
+    dots += `
+      <circle cx="${p.x}" cy="${p.y}" r="${isMain ? 12 : 8}"
+        fill="${isMain ? '#8e44ad' : '#ecf0f1'}"
+        stroke="${isMain ? '#6c3483' : '#bdc3c7'}" stroke-width="1.5"/>
+      <text x="${p.x}" y="${p.y + 4}" text-anchor="middle" font-size="${isMain ? 9 : 7}"
+        font-weight="${isMain ? 'bold' : 'normal'}" fill="${isMain ? 'white' : '#7f8c8d'}">${t}</text>
+    `;
+  }
+
+  return `
+    <svg viewBox="0 0 320 320" width="280" height="280" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ecf0f1" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="${r*0.67}" fill="none" stroke="#f8f4fc" stroke-width="1" stroke-dasharray="3,3"/>
+      ${lines}
+      <polyline points="${polygon}" fill="rgba(142,68,173,0.15)" stroke="#8e44ad" stroke-width="1.5" stroke-linejoin="round"/>
+      ${dots}
+      <circle cx="${cx}" cy="${cy}" r="5" fill="#8e44ad"/>
+    </svg>
+  `;
+}
+
+// ══════════════════════════════════════════════════════
+//  PDF / PRINT REPORT
+// ══════════════════════════════════════════════════════
+function generatePDF() {
+  const r = state.results;
+  const t = TYPE_DATA[r.mainType];
+  const now = new Date();
+  const today = now.toLocaleDateString('de-DE', { day:'2-digit', month:'long', year:'numeric' });
+  const pad = n => String(n).padStart(2,'0');
+  const datePart = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const timePart = `${pad(now.getHours())}-${pad(now.getMinutes())}`;
+  const fileName = `Enneagram ${state.userName} ${datePart} ${timePart}`;
+
+  const stressColor = v => v === 'NIEDRIG' ? '#1e8449' : v === 'HOCH' ? '#c0392b' : '#d4ac0d';
+  const stressBg   = v => v === 'NIEDRIG' ? '#d5f5e3' : v === 'HOCH' ? '#fdebd0' : '#fef9e7';
+
+  const stressLabels = {
+    gesamt: "Gesamtbelastung", beruf: "Beruflich", beziehung: "Beziehungen",
+    koerper: "Körperlich", psyche: "Psychisch", umwelt: "Umwelt", glueck: "Glück"
+  };
+
+  const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>${fileName}</title>
+<style>
+  @page { size: A4; margin: 18mm 18mm 18mm 18mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #2c3e50; font-size: 10pt; line-height: 1.5; }
+
+  .page { page-break-after: always; padding-bottom: 10mm; }
+  .page:last-child { page-break-after: avoid; }
+
+  /* COVER */
+  .cover {
+    background: linear-gradient(160deg, #2c3e50 0%, #8e44ad 100%);
+    min-height: 240mm; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    color: white; border-radius: 6px; padding: 30mm 20mm;
+    margin: -8mm -8mm 10mm -8mm;
+  }
+  .cover-label { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; opacity: 0.7; margin-bottom: 12mm; }
+  .cover-num { font-size: 72pt; font-weight: 900; line-height: 1; opacity: 0.95; }
+  .cover-name { font-size: 22pt; font-weight: 700; margin: 3mm 0; }
+  .cover-sub { font-size: 12pt; opacity: 0.75; margin-bottom: 16mm; }
+  .cover-divider { width: 60mm; height: 1px; background: rgba(255,255,255,0.4); margin: 0 auto 12mm; }
+  .cover-person { font-size: 14pt; font-weight: 600; }
+  .cover-date { font-size: 10pt; opacity: 0.65; margin-top: 2mm; }
+  .cover-note {
+    margin-top: 14mm; font-size: 8pt; opacity: 0.55; max-width: 120mm;
+    border-top: 1px solid rgba(255,255,255,0.2); padding-top: 6mm;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    background: #8e44ad; color: white;
+    padding: 5mm 6mm; border-radius: 4px; margin-bottom: 5mm;
+  }
+  .section-header h2 { font-size: 13pt; font-weight: 700; }
+  .section-header p { font-size: 9pt; opacity: 0.85; margin-top: 1mm; }
+
+  .page-title {
+    background: #f4f1f8; padding: 4mm 6mm; border-radius: 4px;
+    margin-bottom: 5mm; border-left: 4px solid #8e44ad;
+  }
+  .page-title h2 { font-size: 13pt; font-weight: 700; color: #2c3e50; }
+
+  /* STAT GRID */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-bottom: 5mm; }
+  .stat-box { background: #f4f1f8; border-radius: 4px; padding: 3mm; text-align: center; }
+  .stat-val { font-size: 14pt; font-weight: 800; color: #8e44ad; }
+  .stat-lbl { font-size: 7pt; color: #7f8c8d; margin-top: 1mm; }
+
+  /* TWO COLS */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 4mm; }
+  .box { border-radius: 4px; padding: 4mm; }
+  .box-purple { background: #f4f1f8; border-left: 3px solid #8e44ad; }
+  .box-red    { background: #fdf2f2; border-left: 3px solid #c0392b; }
+  .box-green  { background: #eafaf1; border-left: 3px solid #27ae60; }
+  .box-orange { background: #fef9e7; border-left: 3px solid #e67e22; }
+  .box-dark   { background: #f4f1f8; border-left: 3px solid #2c3e50; }
+  .box h4 { font-size: 7pt; text-transform: uppercase; letter-spacing: 0.5px; color: #7f8c8d; margin-bottom: 2mm; }
+  .box p, .box div { font-size: 9.5pt; }
+
+  /* DESCRIPTION */
+  .desc-text { font-size: 9.5pt; line-height: 1.6; margin-bottom: 4mm; }
+  .italic-quote { font-style: italic; color: #5d6d7e; font-size: 9.5pt; margin-bottom: 3mm; }
+
+  /* LISTS */
+  .list-section { margin-bottom: 4mm; }
+  .list-header {
+    font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 2mm 4mm; border-radius: 3px; color: white; margin-bottom: 2mm;
+  }
+  .list-header.green  { background: #27ae60; }
+  .list-header.orange { background: #e67e22; }
+  .list-header.dark   { background: #2c3e50; }
+  .list-item {
+    display: flex; gap: 3mm; align-items: flex-start;
+    padding: 2mm 3mm; margin-bottom: 1.5mm; border-radius: 3px;
+    background: #fafafa; font-size: 9pt;
+  }
+  .list-dot { width: 3px; min-height: 14px; border-radius: 2px; flex-shrink: 0; margin-top: 1px; }
+  .dot-green  { background: #27ae60; }
+  .dot-orange { background: #e67e22; }
+  .dot-purple { background: #8e44ad; }
+
+  /* SCORE BARS */
+  .score-row { display: flex; align-items: center; gap: 3mm; margin-bottom: 2mm; font-size: 8.5pt; }
+  .score-lbl { width: 55mm; }
+  .score-lbl.bold { font-weight: 700; color: #8e44ad; }
+  .score-bar-bg { flex: 1; background: #ecf0f1; border-radius: 3px; height: 6px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 3px; }
+  .score-pct { width: 10mm; text-align: right; color: #7f8c8d; font-size: 8pt; }
+
+  /* STRESS GRID */
+  .stress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; margin-top: 3mm; }
+  .stress-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2mm 3mm; background: #fafafa; border-radius: 3px; font-size: 9pt;
+  }
+  .stress-badge {
+    font-size: 7.5pt; font-weight: 700; padding: 1mm 3mm; border-radius: 10px;
+  }
+
+  /* SUBTYPE */
+  .subtype-item {
+    padding: 3mm 4mm; margin-bottom: 2mm; border-radius: 4px;
+    font-size: 9pt; background: #fafafa;
+  }
+  .subtype-item.active { background: #f4f1f8; border-left: 4px solid #8e44ad; }
+  .subtype-item .name { font-weight: 700; margin-bottom: 1mm; }
+
+  /* CENTER */
+  .center-item {
+    padding: 3mm 4mm; margin-bottom: 2mm; border-radius: 4px;
+    display: flex; align-items: center; gap: 4mm;
+    background: #fafafa;
+  }
+  .center-item.dom { background: #f4f1f8; }
+  .center-dot { width: 4px; height: 16px; border-radius: 2px; flex-shrink: 0; }
+  .center-badge {
+    margin-left: auto; font-size: 7pt; font-weight: 700;
+    padding: 1mm 3mm; border-radius: 10px; color: white;
+  }
+
+  /* LINES */
+  .lines-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+
+  /* HINT ITEMS */
+  .hint-item { display: flex; gap: 3mm; padding: 2.5mm 3mm; margin-bottom: 2mm; background: #fafafa; border-radius: 3px; font-size: 9pt; }
+  .hint-num { background: #8e44ad; color: white; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 7pt; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+  /* CLOSING QUOTE */
+  .closing-quote {
+    margin-top: 6mm; padding: 5mm 6mm; background: #f4f1f8;
+    border-left: 4px solid #8e44ad; border-radius: 4px;
+    font-style: italic; font-size: 9.5pt; color: #5d6d7e;
+  }
+
+  /* FOOTER LINE */
+  .footer { border-top: 1px solid #ecf0f1; margin-top: 6mm; padding-top: 3mm; font-size: 7.5pt; color: #7f8c8d; display: flex; justify-content: space-between; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ PAGE 1: COVER ═══ -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-label">Enneagramm-Report · Persönlich &amp; Vertraulich</div>
+    <div class="cover-num">${r.mainType}</div>
+    <div class="cover-name">${t.name}</div>
+    <div class="cover-sub">Flügel ${r.wing} &nbsp;·&nbsp; ${SUBTYPE_DATA[r.subtype].name}</div>
+    <div class="cover-divider"></div>
+    <div class="cover-person">${state.userName}</div>
+    <div class="cover-date">${today} · STRENG VERTRAULICH</div>
+    <div class="cover-note">Dieser Report basiert auf Ihren Antworten und dient der persönlichen Selbstreflexion. Er ist kein klinisches Instrument.</div>
+  </div>
+</div>
+
+<!-- ═══ PAGE 2: TYPE OVERVIEW ═══ -->
+<div class="page">
+  <div class="section-header">
+    <h2>Typ ${r.mainType}: ${t.name}</h2>
+    <p>${t.core}</p>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-val">${r.mainType}</div><div class="stat-lbl">Haupttyp</div></div>
+    <div class="stat-box"><div class="stat-val">${r.wing}</div><div class="stat-lbl">Flügel</div></div>
+    <div class="stat-box"><div class="stat-val">${r.subtype}</div><div class="stat-lbl">Subtyp</div></div>
+    <div class="stat-box"><div class="stat-val">${r.integrationLevel}</div><div class="stat-lbl">Integration</div></div>
+  </div>
+
+  <p class="desc-text">${t.description}</p>
+
+  <div class="two-col">
+    <div class="box box-purple">
+      <h4>Kernmotivation</h4>
+      <div>${t.motivation}</div>
+    </div>
+    <div class="box box-red">
+      <h4>Kernangst</h4>
+      <div>${t.fear}</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="box box-dark">
+      <h4>Weltanschauung</h4>
+      <div class="italic-quote">"${t.worldview}"</div>
+    </div>
+    <div class="box box-dark">
+      <h4>Innerer Monolog</h4>
+      <div class="italic-quote">"${t.inner}"</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="box box-green">
+      <h4>Gaben</h4>
+      <div>${t.gifts}</div>
+    </div>
+    <div class="box box-orange">
+      <h4>Laster</h4>
+      <div>${t.vice}</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>${state.userName} · STRENG VERTRAULICH</span>
+    <span>Typ ${r.mainType} · ${t.name}</span>
+  </div>
+</div>
+
+<!-- ═══ PAGE 3: STRENGTHS & WEAKNESSES ═══ -->
+<div class="page">
+  <div class="page-title"><h2>Stärken &amp; Herausforderungen</h2></div>
+
+  <div class="list-section">
+    <div class="list-header green">✦ Stärken</div>
+    ${t.strengths.map(s => `<div class="list-item"><div class="list-dot dot-green"></div><span>${s}</span></div>`).join('')}
+  </div>
+
+  <div class="list-section">
+    <div class="list-header orange">⚡ Herausforderungen</div>
+    ${t.weaknesses.map(w => `<div class="list-item"><div class="list-dot dot-orange"></div><span>${w}</span></div>`).join('')}
+  </div>
+
+  <div class="list-section" style="margin-top:5mm">
+    <div class="list-header dark">↔ Entspannungs- &amp; Wachstumslinien</div>
+    <div class="lines-grid">
+      <div class="box box-purple">
+        <h4>Entspannungspunkt → Typ ${t.relax}</h4>
+        <div>Bei Entspannung nehmen Sie positive Eigenschaften von Typ ${t.relax} an und gewinnen mehr Gelassenheit und innere Stabilität.</div>
+      </div>
+      <div class="box box-red">
+        <h4>Stresspunkt → Typ ${t.stress}</h4>
+        <div>Unter hohem Druck können Sie weniger hilfreiche Muster von Typ ${t.stress} übernehmen. Achtsamkeit hilft, diesen Automatismus zu durchbrechen.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>${state.userName} · STRENG VERTRAULICH</span>
+    <span>Typ ${r.mainType} · ${t.name}</span>
+  </div>
+</div>
+
+<!-- ═══ PAGE 4: SUBTYPE & CENTERS ═══ -->
+<div class="page">
+  <div class="page-title"><h2>Subtyp &amp; Ausdruckszentren</h2></div>
+
+  <div class="list-header dark" style="margin-bottom:3mm">27 Subtypen — Ihr instinktiver Antrieb</div>
+  ${['SP','SX','SO'].map(sub => `
+    <div class="subtype-item ${sub === r.subtype ? 'active' : ''}">
+      <div class="name" style="color:${sub === r.subtype ? '#8e44ad' : '#2c3e50'}">${SUBTYPE_DATA[sub].name}${sub === r.subtype ? ' ✓' : ''}</div>
+      <div style="color:#5d6d7e; font-size:8.5pt">${SUBTYPE_DATA[sub].desc}</div>
+    </div>
+  `).join('')}
+
+  <div class="list-header dark" style="margin:5mm 0 3mm">Ausdruckszentren</div>
+  ${['feeling','thinking','action'].map(c => {
+    const isDom = c === r.center.dominant;
+    const isWeak = c === r.center.weakest;
+    const col = isDom ? '#8e44ad' : isWeak ? '#bdc3c7' : '#7f8c8d';
+    const badge = isDom ? 'DOMINANT' : isWeak ? 'SCHWACH' : 'MITTEL';
+    const names = { feeling:'Gefühlszentrum', thinking:'Denkzentrum', action:'Handlungszentrum' };
+    return `<div class="center-item ${isDom ? 'dom' : ''}">
+      <div class="center-dot" style="background:${col}"></div>
+      <div>
+        <div style="font-weight:700; font-size:10pt; color:${col}">${names[c]}</div>
+        <div style="font-size:8.5pt; color:#5d6d7e">${CENTER_DATA[c].desc}</div>
+      </div>
+      <div class="center-badge" style="background:${col}">${badge}</div>
+    </div>`;
+  }).join('')}
+
+  <div class="footer">
+    <span>${state.userName} · STRENG VERTRAULICH</span>
+    <span>Typ ${r.mainType} · ${t.name}</span>
+  </div>
+</div>
+
+<!-- ═══ PAGE 5: SCORES & STRESS ═══ -->
+<div class="page">
+  <div class="page-title"><h2>Typ-Profil &amp; Belastungsprofil</h2></div>
+
+  <div class="list-header dark" style="margin-bottom:3mm">Alle 9 Typen — Ihr Scoring-Profil</div>
+  ${r.sortedTypes.map(item => {
+    const isMain = item.type === r.mainType;
+    return `<div class="score-row">
+      <div class="score-lbl ${isMain ? 'bold' : ''}">Typ ${item.type}: ${TYPE_DATA[item.type].name}</div>
+      <div class="score-bar-bg">
+        <div class="score-bar-fill" style="width:${item.pct}%; background:${isMain ? '#8e44ad' : '#bdc3c7'}"></div>
+      </div>
+      <div class="score-pct">${item.pct}%</div>
+    </div>`;
+  }).join('')}
+
+  <div class="list-header dark" style="margin:5mm 0 2mm">Belastungsprofil</div>
+  <div class="stress-grid">
+    ${Object.entries(stressLabels).map(([dim, label]) => {
+      const val = r.stressMap[dim] || 'MITTEL';
+      return `<div class="stress-item">
+        <span>${label}</span>
+        <span class="stress-badge" style="color:${stressColor(val)}; background:${stressBg(val)}">${val}</span>
+      </div>`;
+    }).join('')}
+  </div>
+  <p style="font-size:7.5pt; color:#7f8c8d; margin-top:3mm">Das Belastungsprofil spiegelt Ihre subjektive Wahrnehmung Ihrer aktuellen Situation wider und ist kein objektives Maß.</p>
+
+  <div class="footer">
+    <span>${state.userName} · STRENG VERTRAULICH</span>
+    <span>Typ ${r.mainType} · ${t.name}</span>
+  </div>
+</div>
+
+<!-- ═══ PAGE 6: INTEGRATION & ENTWICKLUNG ═══ -->
+<div class="page">
+  <div class="page-title"><h2>Integration &amp; Entwicklungshinweise</h2></div>
+
+  <div class="two-col" style="margin-bottom:5mm">
+    <div class="box ${r.integrationLevel === 'Hoch' ? 'box-green' : r.integrationLevel === 'Mittel' ? 'box-orange' : 'box-red'}">
+      <h4>Integrationsgrad</h4>
+      <div style="font-size:16pt; font-weight:800; color:${r.integrationLevel === 'Hoch' ? '#1e8449' : r.integrationLevel === 'Mittel' ? '#d4ac0d' : '#c0392b'}">${r.integrationLevel}</div>
+      <div style="font-size:8pt; margin-top:1mm; color:#5d6d7e">Der Integrationsgrad misst, inwieweit Sie sich von den Ego-Fixierungen Ihres Typs befreit haben. Er schwankt je nach Lebensumständen.</div>
+    </div>
+    <div class="box box-dark">
+      <h4>Entwicklungsachse</h4>
+      <div style="font-size:9pt">↗ Entspannung: <strong>Typ ${t.relax}</strong></div>
+      <div style="font-size:9pt; margin-top:2mm">↙ Stress: <strong>Typ ${t.stress}</strong></div>
+      <div style="font-size:9pt; margin-top:2mm">🪶 Flügel: <strong>Typ ${r.mainType === 1 ? 9 : r.mainType - 1}</strong> &amp; <strong>Typ ${r.mainType === 9 ? 1 : r.mainType + 1}</strong></div>
+    </div>
+  </div>
+
+  <div class="list-header dark" style="margin-bottom:3mm">Entwicklungshinweise</div>
+  ${[
+    `Verbinden Sie sich mit Ihrer Kernangst: <em>"${t.fear}"</em> — Beobachten Sie, wann diese Angst Ihr Verhalten steuert.`,
+    `Nutzen Sie den Entspannungspunkt Typ ${t.relax}: In Momenten der Ruhe können Sie positive Qualitäten dieses Typs integrieren.`,
+    `Beobachten Sie den Stresspunkt Typ ${t.stress}: Unter Druck — welche Muster übernehmen Sie automatisch?`,
+    `Erkunden Sie Ihre Flügel (Typ ${r.mainType === 1 ? 9 : r.mainType - 1} und Typ ${r.mainType === 9 ? 1 : r.mainType + 1}): Qualitäten beider Nachbartypen können Ihren Hauptstil bereichern.`,
+    `Arbeiten Sie bewusst mit dem ${CENTER_DATA[r.center.weakest].name}: Als schwächstes Zentrum bietet es das größte Entwicklungspotenzial.`,
+    `Beziehen Sie Ihren Subtyp <strong>${SUBTYPE_DATA[r.subtype].name}</strong> in Ihre Selbstbeobachtung ein — er prägt Ihren Ausdruck entscheidend mit.`,
+  ].map((hint, i) => `<div class="hint-item"><div class="hint-num">${i+1}</div><span>${hint}</span></div>`).join('')}
+
+  <div class="closing-quote">
+    „Das Enneagramm ist kein Käfig, sondern ein Spiegel — es zeigt uns unsere Muster, damit wir freier werden können. Ihr Typ ist Ihr Startpunkt, nicht Ihr Ziel."
+  </div>
+
+  <div class="footer">
+    <span>${state.userName} · STRENG VERTRAULICH</span>
+    <span>Enneagramm-Report · ${today}</span>
+  </div>
+</div>
+
+</body>
+</html>`;
+
+  // Open print window
+  const printWin = window.open('', '_blank', 'width=900,height=700');
+  printWin.document.write(html);
+  printWin.document.close();
+  printWin.onload = () => {
+    setTimeout(() => {
+      printWin.focus();
+      printWin.print();
+    }, 400);
+  };
+}
+
+function restart() {
+  state = { userName: "", currentQ: 0, questions: [], answers: {}, phase: "core", topCandidates: [], results: null };
+  showScreen('welcome');
+}
+</script>
+</body>
+</html>
