@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Enneagramm-Test</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root {
     --primary: #2c3e50;
@@ -945,7 +947,7 @@ function buildEnneagramSVG(mainType, sortedTypes) {
 // ══════════════════════════════════════════════════════
 //  PDF / PRINT REPORT
 // ══════════════════════════════════════════════════════
-function generatePDF() {
+async function generatePDF() {
   const r = state.results;
   const t = TYPE_DATA[r.mainType];
   const now = new Date();
@@ -1327,16 +1329,76 @@ function generatePDF() {
 </body>
 </html>`;
 
-  // Open print window
-  const printWin = window.open('', '_blank', 'width=900,height=700');
-  printWin.document.write(html);
-  printWin.document.close();
-  printWin.onload = () => {
-    setTimeout(() => {
-      printWin.focus();
-      printWin.print();
-    }, 400);
-  };
+  // ── Render report off-screen, capture with html2canvas, export via jsPDF ──
+  const pdfBtn = document.querySelector('.btn-pdf');
+  pdfBtn.disabled = true;
+  pdfBtn.textContent = '⏳ PDF wird erstellt…';
+
+  // Create hidden container
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = [
+    'position:fixed', 'left:-9999px', 'top:0',
+    'width:794px',       // ~A4 at 96dpi
+    'background:#fff',
+    'z-index:-1',
+    'font-family:Segoe UI,Arial,sans-serif'
+  ].join(';');
+
+  // Extract only the <body> content from html string
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  wrapper.innerHTML = bodyMatch ? bodyMatch[1] : html;
+  document.body.appendChild(wrapper);
+
+  // Let browser render
+  await new Promise(r => setTimeout(r, 600));
+
+  try {
+    const canvas = await html2canvas(wrapper, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: 794
+    });
+
+    document.body.removeChild(wrapper);
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const pageW = doc.internal.pageSize.getWidth();   // 210 mm
+    const pageH = doc.internal.pageSize.getHeight();  // 297 mm
+
+    // Image dimensions in mm (maintain aspect ratio)
+    const imgW = pageW;
+    const imgH = (canvas.height / canvas.width) * pageW;
+
+    let yOffset = 0;
+    let pageCount = 0;
+
+    while (yOffset < imgH) {
+      if (pageCount > 0) doc.addPage();
+      // Position image so current page slice is visible
+      doc.addImage(
+        canvas.toDataURL('image/jpeg', 0.92),
+        'JPEG',
+        0, -yOffset,   // x, y (negative y scrolls down into image)
+        imgW, imgH
+      );
+      yOffset += pageH;
+      pageCount++;
+    }
+
+    doc.save(`${fileName}.pdf`);
+
+  } catch (err) {
+    document.body.removeChild(wrapper);
+    console.error('PDF-Fehler:', err);
+    alert('PDF-Erstellung fehlgeschlagen. Bitte versuche es erneut.');
+  } finally {
+    pdfBtn.disabled = false;
+    pdfBtn.textContent = '📄 PDF-Report herunterladen';
+  }
 }
 
 function restart() {
